@@ -44,11 +44,11 @@
 // === end ownership note ===
 
 const char* APP_NAME PROGMEM = "RemotePowerControl";
-const char* APP_VER  PROGMEM = "1.0.0 build 20260606";
+const char* APP_VER  PROGMEM = "1.0.1 build 20260606";
 
 #define MYTZ TZ_Asia_Jerusalem
-static time_t boottime = 0L;
-int timeset_cnt = 0;
+static volatile time_t boottime = 0L;
+volatile int timeset_cnt = 0;
 
 // WiFi, OTA
 const char* SSID = _WIFI_SSID_ ;
@@ -84,11 +84,9 @@ const char *topics[] = {
 // === end /mqtt section ===
 
 // JSON and temp buffers
-DynamicJsonDocument doc(1024); // JSON
-#define BUFFER_SIZE  (1024)
+DynamicJsonDocument doc(2048); // JSON — 2048 to fit full connection_info field set (mqtt M-2/M-3)
+#define BUFFER_SIZE  (2048)
 char BUF[BUFFER_SIZE];
-
-void send_status();
 
 // Callbacks:
 void mqtt_received_callback(char* topic, byte* payload, unsigned int length);
@@ -254,10 +252,10 @@ void setup() {
   configTime(MYTZ, "pool.ntp.org");
 #endif
 #if defined(ESP32)
-  const long  gmtOffset_sec = 7200; // GMT +2
-  const int   daylightOffset_sec = 3600;
   sntp_set_time_sync_notification_cb(settime_cb);
-  configTime(gmtOffset_sec, daylightOffset_sec, "pool.ntp.org");
+  configTime(0, 0, "pool.ntp.org");
+  setenv("TZ", "IST-2IDT,M3.4.4/26,M10.5.0", 1);
+  tzset();
 #endif
   // wifiConnect.begin_nb(SSID, PWD, true);
   wifiConnect.begin(SSID, PWD, HOST);
@@ -330,10 +328,12 @@ void loop() {
   serialDebug.handleClient();
   webSServer.handleClient();
 
+#if defined(_SN_TEST_BUILD_)
   if (millis() - 1000 > ll) {
     Serial.printf("=======>>>>> Button: %s\n", (digitalRead(BUTTON_GPIO) == 1 ? "not pressed" : "PRESSED"));
     ll = millis();
   }
+#endif
 }
 
 /*
@@ -370,7 +370,7 @@ void send_info(const char* topic, boolean connection_info) {
   t[strlen(t) -1] = '\0';
   doc["now"] = &t[4];
   doc["boottime"] = (uint32_t)boottime;
-  t = ctime(&boottime);
+  { time_t bt = boottime; t = ctime(&bt); }
   t[strlen(t) -1] = '\0';
   doc["boot"] = &t[4];
   doc["MAC"] = wifiConnect.getMAC();
@@ -440,7 +440,9 @@ void send_info(const char* topic, boolean connection_info) {
   }
 
   serializeJson(doc, BUF, BUFFER_SIZE);
-  mqttClient.publish(topic, BUF);
+  if (!mqttClient.publish(topic, BUF)) {
+    Serial.printf("WARN: send_info publish failed, topic: %s payload len: %d\n", topic, strlen(BUF));
+  }
 }
 
 void main_debug_info() {
@@ -462,7 +464,7 @@ void main_debug_info() {
   t[strlen(t) -1] = '\0';
   Serial.printf("Now: %s\n", t);
   Serial.printf("Boot timestamp: %u\n", (uint32_t)boottime);
-  t = ctime(&boottime);
+  { time_t bt = boottime; t = ctime(&bt); }
   t[strlen(t) -1] = '\0';
   Serial.printf("Boot time: %s\n", t);
   Serial.printf("timeset_cnt: %d\n", timeset_cnt);
@@ -496,6 +498,7 @@ void main_debug_info() {
 void mqtt_received_callback(char* topic, byte* payload, unsigned int length) {
   Serial.printf("mqtt_received_callback called: '%s'\n", topic);
   if(strcmp(topic, STR_POWER_SET) == 0) {
+    if (length < 3) return; // guard: payload[0] + ' ' + payload[2] required (C-1)
     int switch_idx = payload[2] - '1';
     if (switch_idx >-1 && switch_idx < 3) {
       if (rSwitch[switch_idx] != NULL) {

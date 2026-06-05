@@ -15,9 +15,9 @@ void LOG_HEX(uint8_t dig);
 
 void LOG_ERROR(const char *msg);
 void LOG_ERROR(const char *msg1, String msg2);
-void LOG_ERROR(char *msg1, const char *msg2);
+void LOG_ERROR(const char *msg1, const char *msg2);
 void LOG_ERROR(const char *msg1, const char *msg2, const char *msg3);
 
-void LOG_DDEBUG(const char *msg);
+void LOG_DEBUG(const char *msg);
 
 #endif

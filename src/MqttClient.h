@@ -1,7 +1,7 @@
 #ifndef _SN_MQTT_CLIENT_H_
 #define _SN_MQTT_CLIENT_H_
 
-#define MQTT_MAX_PACKET_SIZE 1024
+#define MQTT_MAX_PACKET_SIZE 2048
 #define WILLQOS 0
 
 #include <WiFiClient.h>

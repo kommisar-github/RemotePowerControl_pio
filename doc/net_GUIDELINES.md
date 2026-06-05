@@ -31,6 +31,8 @@
 
 - **C3 All begin() overload args must be forwarded, never silently dropped (M2 + mqtt M-1).** `WiFiConnect::begin(ssid,pwd,hostname,mdns_enabled)` passes hardcoded `false` for `mdns_enabled`. Every overload must forward all params to the canonical overload, or not accept the param. Constant-where-a-param-belongs is not acceptable delegation.
 
+- **C5 millis() interval math must use `unsigned long` — never assign a millis() difference to a signed type (loopgate deadlock, P1).** `long period = (unsigned long)t - (unsigned long)stamp` silently sign-flips when the true elapsed time enters [2^31, 2^32) ms (~24.85–49.71 days uptime), making `period` negative and causing `period >= INTERVAL` to permanently return false until millis() rolls over. This froze the gate-reopen poll at `WiFiConnect.cpp:347` for up to ~24.9 days — exactly matching the "self-resolves after DAYS" symptom. Rule: all millis() delta variables must be `unsigned long`; drop any `|| period < 0` dead branches that result. (Provenance: `/review` adjudication in `doc/audit/2026-06-06-bughunt-loopgate.md`.)
+
 - **C4 No begin()/pinMode()/digitalWrite() in global ctors (L8).** Global object ctors run at static-init before `setup()`/GPIO init; hardware calls may no-op or produce undefined state. Ctors init plain data only; hardware init belongs in `setup()`. (`Test.cpp:45-48`)
 
 ## Decisions

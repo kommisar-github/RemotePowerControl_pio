@@ -48,6 +48,11 @@ void RSwitch::set_power_status(POWER_STATUS new_power_status) {
     POWER_STATUS prev_power_status = power_status;
     power_status = new_power_status;
     power_status_changed_mills = millis();
+    if (new_power_status == POWER_ON) {
+      on_time = power_status_changed_mills;
+    } else if (new_power_status == POWER_OFF) {
+      off_time = power_status_changed_mills;
+    }
     if (power_status_change_callback != nullptr) {
       power_status_change_callback(this, new_power_status, prev_power_status);
     }
@@ -265,8 +270,8 @@ void RSwitch::detect_power_status_old() {
     }
   }
   else {
-    // Validate status periodically
-    if (time - last_detect_gpio_validation > VALIDATE_SWITCH_STATUS_PERIOD_MINS*60*1000) {
+    // Validate status periodically (skip during SLEEP — mid-pulse GPIO read would corrupt state)
+    if (time - last_detect_gpio_validation > VALIDATE_SWITCH_STATUS_PERIOD_MINS*60*1000 && power_status != SLEEP) {
       use_stat = true;
       Serial.println("## Periodic status validation.");
     }
@@ -305,7 +310,7 @@ void RSwitch::longPress() {
       //long_push();
       set_power_status(POWERING_ON);
     }
-    else if (isPowerOff()) {
+    else if (isPowerOn()) {
       Serial.println("LONG PRESS: POWERING_OFF");
       //long_push();
       set_power_status(POWERING_OFF);
@@ -344,7 +349,7 @@ void RSwitch::setSwitch(bool on_off_status) {
     }
   }
   else {
-    if (isPowerOn() || isPoweringOff()) {
+    if (isPowerOn()) {
       Serial.println("SET_POWER_OFF");
       short_push();
       set_power_status(POWERING_OFF);

@@ -10,15 +10,15 @@
 #include <ArduinoOTA.h>
 #include "OTA.h"
 
-#ifdef ESP8266 && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
+#if defined(ESP8266) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
 #include <ESP8266mDNS.h>
 #endif
-#ifdef ESP32 && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
+#if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
 #include <ESPmDNS.h>
 #endif
 
 #include "MdnsClient.h"
-#include "log.h"
+#include "Log.h"
 
 OTAClient otaClient; // Created OTAClient instance
 
@@ -64,7 +64,7 @@ void OTAClient::begin(const char *host, const char *passwd)
   ArduinoOTA.begin();
 
   LOG("OTA ready");
-#ifdef ESP8266 && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
+#if defined(ESP8266) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
   if (MDNS.isRunning())
   {
     LOG("OTA: mDNS: ", getHostname() + ".local");

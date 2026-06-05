@@ -29,7 +29,7 @@
 #include <esp_wifi.h>
 #endif
 
-#include "log.h"
+#include "Log.h"
 #include "WiFiConnect.h"
 #include "MdnsClient.h"
 
@@ -198,7 +198,7 @@ boolean WiFiConnect::begin(const char* ssid, const char* pwd, const char *hostna
       #ifdef ESP32
       WiFi.setSleep(WIFI_PS_NONE);
       #endif
-      long period = millis() - last_reconnect_attempt;
+      unsigned long period = millis() - last_reconnect_attempt;
       bool reconnect_fl = (period >= RECONNECT_INTERVAL);
       if (reconnect_fl) {
         reconnect();
@@ -344,7 +344,7 @@ void WiFiConnect::handleClient() {
 
   unsigned long t = millis();
   if (!connection_established) {
-    long period = t - test_connection_lastActivity;
+    unsigned long period = t - test_connection_lastActivity;
     if (period >= TEST_CONNECTION_INTERVAL_NB) {
       test_connection_lastActivity = t;
       if (WiFi.status() == WL_CONNECTED) {
@@ -361,7 +361,7 @@ void WiFiConnect::handleClient() {
         WiFi.setSleep(WIFI_PS_NONE);
         #endif
         period = t - last_reconnect_attempt;
-        bool reconnect_fl = (period >= RECONNECT_INTERVAL || period < 0 );
+        bool reconnect_fl = (period >= RECONNECT_INTERVAL);
         if (reconnect_fl) {
           reconnect();
           last_reconnect_attempt = t;
@@ -383,7 +383,7 @@ void WiFiConnect::handleClient() {
         try_reconnect();
     }
     else {
-      long period = t - test_try_N_lastActivity;
+      unsigned long period = t - test_try_N_lastActivity;
       if (period >= TRY_PHY_N_INTERVAL) {
         #ifdef ESP8266
         if (getPhyMode() != WIFI_PHY_MODE_11N) {

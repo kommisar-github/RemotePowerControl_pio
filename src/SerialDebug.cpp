@@ -6,7 +6,7 @@
 
 #include "Application.h"
 #include "SerialDebug.h"
-#include "log.h"
+#include "Log.h"
 
 #define CMD_HELP "help"
 #define CMD_INFO "info"

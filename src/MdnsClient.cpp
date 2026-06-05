@@ -8,15 +8,15 @@
 #include <ArduinoOTA.h>
 #include "MdnsClient.h"
 
-#ifdef ESP8266 && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
+#if defined(ESP8266) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
 #include <ESP8266mDNS.h>
 #endif
-#ifdef ESP32 && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
+#if defined(ESP32) && !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
 #include <ESPmDNS.h>
 #endif
 
 
-#include "log.h"
+#include "Log.h"
 
 MdnsClient mdnsClient;  // Created MdnsClient instance
 

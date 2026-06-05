@@ -5,7 +5,7 @@
 //   v0.2 20221014 - Enhancements
 
 #include "Application.h"
-#include "log.h"
+#include "Log.h"
 
 void LOG(const char *msg) {
   Serial.println(msg);

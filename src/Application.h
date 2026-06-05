@@ -10,7 +10,7 @@
 #include "pins_arduino.h"  // for digitalPinToBitMask, etc
 #endif
 
-#include "log.h"
+#include "Log.h"
 
 // ESP8266  ESP32
 // D1 mini  D1 mini
@@ -25,8 +25,10 @@
 //   D8        5  
 
 #if defined(ESP8266)
-// ESP8266: D1 mini: 
-//     For Relay use either D1/GPIO05 and D2/GPIO04. They are high impendance during reset and boot.
+// ESP8266: D1 mini:
+//   SWITCH1=D1/GPIO5, SWITCH3=D2/GPIO4 — high-impedance at boot (boot-safe for active-HIGH relay).
+//   SWITCH2=D8/GPIO15 — strapping pin with external pulldown; held LOW at boot (not high-impedance,
+//   but safe for active-HIGH relay: LOW at boot = relay off). Do NOT use active-LOW relay on D8.
 #define POWER_DETECT1_GPIO D7
 #define POWER_SWITCH1_GPIO D1
 #define POWER_DETECT2_GPIO D6
@@ -38,11 +40,14 @@
 #define BUTTON_GPIO        D0
 #endif
 #if defined(ESP32)
-// ESP32: D1 mini: 
+// ESP32: D1 mini:
+//   SWITCH1=GPIO22, SWITCH3=GPIO21 — not strapping pins; high-impedance at boot (boot-safe).
+//   SWITCH2=GPIO13 — not a strapping pin; high-impedance at boot (boot-safe for active-HIGH relay).
+//   (GPIO5 was used previously but is an ESP32 strapping pin pulled HIGH at boot — relay fires on reset.)
 #define POWER_DETECT1_GPIO 23
 #define POWER_SWITCH1_GPIO 22
 #define POWER_DETECT2_GPIO 19
-#define POWER_SWITCH2_GPIO  5
+#define POWER_SWITCH2_GPIO 13
 #define POWER_DETECT3_GPIO 18
 #define POWER_SWITCH3_GPIO 21
 

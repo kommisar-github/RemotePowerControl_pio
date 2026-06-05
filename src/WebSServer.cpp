@@ -1,6 +1,6 @@
 #include "WebSServer.h"
 #include "strings1.h"
-#include "log.h"
+#include "Log.h"
 //#include "MqttClient.h"
 #include <ArduinoJson.h>                // JSON parser
 
@@ -39,7 +39,9 @@ void WebSServer::handleClient() {
 void WebSServer::handleRootFrame() {
   String page;
   page += FPSTR(PAGE_BUTTONS);
-  page.replace("device1", "DEVICE1");
+  page.replace("{device1}", "Device 1");
+  page.replace("{device2}", "Device 2");
+  page.replace("{device3}", "Device 3");
   _server->send(200, "text/html", page);
   LOG("handleRootFrame()");
 }
@@ -98,7 +100,7 @@ void WebSServer::handleSetSwitch() {
 }
 
 // JSON and temp buffers
-static DynamicJsonDocument doc(256); // JSON
+static DynamicJsonDocument doc(384); // JSON
 #define BUFFER_SIZE  (256)
 static char BUF[BUFFER_SIZE];
 
@@ -123,7 +125,7 @@ void WebSServer::handleGetStatus() {
     }
   }
   serializeJson(doc, BUF, BUFFER_SIZE);
-  _server->send(200, "text/plain", BUF);
+  _server->send(200, "application/json", BUF);
   LOG("WEB: Send getStatus response:", BUF);
 
 }

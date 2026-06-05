@@ -25,7 +25,7 @@
 #include <WiFi.h>
 #endif
 #include "MqttClient.h"
-#include "log.h"
+#include "Log.h"
 
 #define STR_CONNECTED    "connected"
 #define STR_DISCONNECTED "disconnected"
@@ -232,7 +232,6 @@ void MqttClient::resubscribe() {
       Serial.println(_topics[i]);
       subscribe(_topics[i]);
     }
-    _client->subscribe("inTopic");
     Serial.println("MQTT subscribed");
   }
 }

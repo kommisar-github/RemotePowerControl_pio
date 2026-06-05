@@ -36,7 +36,7 @@
 #include "Test.h"
 #include "WiFiConnect.h"
 #include "MqttClient.h"
-#include "log.h"
+#include "Log.h"
 
 #define MIN_TIMESTAMP 1640998800L  // Timestamp in sec. 1640998800  January 1, 2022 3:00:00 AM GMT+02:00
 
@@ -191,6 +191,13 @@ void Test::test_connection() {
         wifi_lost_cnt++;
         wifi_conn_timestamp = 0L;
         wifi_lost_timestamp = time(nullptr);
+        if (mqtt_conn_timestamp > 0L) {
+          mqtt_lost_cnt++;
+          mqtt_conn_timestamp = 0L;
+          mqtt_lost_timestamp = wifi_lost_timestamp;
+          change_event_callback(EVENT_MQTT_LOST);
+          LOG("EVENT_MQTT_LOST: ", (ulong) mqtt_lost_timestamp);
+        }
         change_event_callback(EVENT_WIFI_LOST);
         LOG("EVENT_WIFI_LOST: ", (ulong) wifi_lost_timestamp);
       }
