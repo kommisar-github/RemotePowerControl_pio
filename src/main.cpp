@@ -44,7 +44,7 @@
 // === end ownership note ===
 
 const char* APP_NAME PROGMEM = "RemotePowerControl";
-const char* APP_VER  PROGMEM = "1.01 build 20241012";
+const char* APP_VER  PROGMEM = "1.0.0 build 20260606";
 
 #define MYTZ TZ_Asia_Jerusalem
 static time_t boottime = 0L;
