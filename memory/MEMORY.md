@@ -9,7 +9,7 @@ Canonical project facts (architecture, decisions, failure modes) belong in
 
 ## Files
 
-(none yet — add memory files here and index them, one line each, as work accrues)
+- [agents-own-guidelines-writes](agents-own-guidelines-writes.md) — the owning agent writes its own GUIDELINES; PM runs the gate + commits, never authors the content.
 
 ## Update protocol
 

@@ -1,5 +1,5 @@
 # /mqtt — Agent Guidelines
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-06
 
 ## Abstract
 
@@ -17,14 +17,26 @@
 
 ---
 
+*Provenance: entries below derived from `doc/audit/2026-06-06-audit.md` (canonical `/review`-verified audit) + `doc/audit/2026-06-06-wave1-raw-findings.md`; approved by `/review` (verdict: APPROVE, no edits) — 2026-06-06.*
+
+*Note: the "silently-ignored-config" pattern referenced below is a project-wide failure class; see `doc/design/ARCHITECTURE.md` → Cross-cutting failure patterns for the pattern-level policy.*
+
 ## Conventions
 
-(none yet — populate only when PM or the user asks)
+- **Inbound callback: length-guard before indexing payload (C-1, P0).** `mqtt_received_callback` and any inbound handler MUST `if (length < N) return;` before the first `payload[N-1]` access. PubSubClient doesn't null-terminate or enforce min length; short/crafted msg → stale bytes → garbage `switch_idx` that may pass `(-1<idx<3)` and actuate wrong relay. Fix: `if (length < 3) return;` atop STR_POWER_SET. (C1/C3; `main.cpp:499`)
+
+- **info JSON: both DynamicJsonDocument pool AND MQTT frame must fit 1024 B (M-2+M-3, P1).** (1) ArduinoJson 6 silently drops fields when the pool (`DynamicJsonDocument(1024)`, `main.cpp:87`) is exhausted (~35 fields likely overflow). (2) MQTT frame `5+2+strlen(topic)+strlen(payload)` (~1054 B) exceeds `MQTT_MAX_PACKET_SIZE=1024`; `publish()` returns false but caller ignores it → HA gets no telemetry silently. Fix: raise doc+BUF to 2048 or split connection_info into a 2nd publish; check publish() return. (Cross-corroborated mqtt M-2/M-3 + firmware F-07.)
+
+- **begin() enabled-flag overload silent-drop (M-1).** `begin(server,id,bool enabled)` delegates to 4-arg which unconditionally sets `_enabled=true` (`MqttClient.cpp:95`), overriding `false`. Until fixed always pass `true`; don't use the boolean overload to defer init. Instance of systemic "silently-ignored-config". Fix: remove the unconditional `_enabled=true`.
 
 ## Decisions
 
-(none yet — append dated entries when PM or the user asks)
+- **STR_POWER_GET handler intentionally no-op (pending) (L-4).** `power/get` subscribed but body commented (`main.cpp:512-513`); retained `state/`+`status/` cover steady state. Implement-vs-deprecate is an open decision (see Open Questions Q1).
+
+- **Legacy "inTopic" subscription dead, scheduled for removal (L-2).** `resubscribe()` subscribes `"inTopic"` each reconnect (`MqttClient.cpp:235`); no handler matches. Grouped with dead-code cleanup (P2).
 
 ## Open Questions
 
-(none yet)
+- **Q1 Should power/get trigger on-demand refresh?** (a) call `refresh_all_switches_state()` for HA polling, or (b) remove subscription. Retained topics give eventual consistency; (a) only if HA needs synchronous confirmation. Defer to fix phase.
+
+- **Q2 Should LWT/announcement "connected" be retained?** Both announcement and LWT currently non-retained; HA restart won't see "connected" until next keepalive (60 s). Documented intentional (MQTT_API.md) but may degrade HA availability UX.

@@ -1,5 +1,5 @@
 # /net — Agent Guidelines
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-06-06
 
 ## Abstract
 
@@ -17,14 +17,26 @@
 
 ---
 
+*Provenance: entries below consolidated from `doc/audit/2026-06-06-audit.md` (legacy-code audit, Wave 3). Delta approved by `/review` (APPROVE, no edits) on 2026-06-06. See `doc/audit/2026-06-06-guidelines-drafts.md` §3 for the authoritative source text.*
+
+*Cross-cutting note: C1 and C3 below are domain instances of the project-wide "silently-ignored-configuration" failure class — see `ARCHITECTURE.md` → Cross-cutting failure patterns for the pattern-level policy.*
+
+---
+
 ## Conventions
 
-(none yet — populate only when PM or the user asks)
+- **C1 Use `#if defined(X) && cond`, never `#ifdef X && cond` (H1, P1).** `#ifdef` takes one identifier; trailing `&&`/`!defined(...)` are silently ignored (warning only). `OTA.cpp:13/16/67` + `MdnsClient.cpp` drop their `NO_GLOBAL_*` guards. WiFiConnect.cpp already correct. Lead instance of systemic "silently-ignored-config".
+
+- **C2 WiFi-lost path MUST also reset mqtt_conn_timestamp (H2, C4, P1).** When `EVENT_WIFI_LOST` fires, the MQTT branch is unreachable while WiFi is down; stale `mqtt_conn_timestamp > 0` → `EVENT_MQTT_LOST` fires after `EVENT_WIFI_RESTORED` (wrong order) and `EVENT_MQTT_RESTORED` may be suppressed entirely. That event drives `refresh_all_switches_state()` + re-announce → HA stale on miss. Rule: clear `mqtt_conn_timestamp` atomically in the WiFi-lost branch (fire `EVENT_MQTT_LOST` if it was > 0). (`Test.cpp:~190`)
+
+- **C3 All begin() overload args must be forwarded, never silently dropped (M2 + mqtt M-1).** `WiFiConnect::begin(ssid,pwd,hostname,mdns_enabled)` passes hardcoded `false` for `mdns_enabled`. Every overload must forward all params to the canonical overload, or not accept the param. Constant-where-a-param-belongs is not acceptable delegation.
+
+- **C4 No begin()/pinMode()/digitalWrite() in global ctors (L8).** Global object ctors run at static-init before `setup()`/GPIO init; hardware calls may no-op or produce undefined state. Ctors init plain data only; hardware init belongs in `setup()`. (`Test.cpp:45-48`)
 
 ## Decisions
 
-(none yet — append dated entries when PM or the user asks)
+- **D1 Test event-ordering guarantees under WiFi drop/restore (C4) (2026-06-06).** After H2 fix: drop-together → `EVENT_MQTT_LOST` then `EVENT_WIFI_LOST` (same tick); restore → `EVENT_WIFI_RESTORED` then `EVENT_MQTT_RESTORED`; MQTT-only drop → `EVENT_MQTT_LOST`. Any change to order/suppression is a C4 contract change → surface to /pm.
 
 ## Open Questions
 
-(none yet)
+- **OQ1 Hardcoded network ID 192.168.66.0 in bad-DHCP detection (L7).** `Test.cpp:181` forces reconnect on exactly `192.168.66.0` (+ `!isIPAddressSet(gatewayIP)`). Options: (a) build-flag `-D BAD_DHCP_NETWORK_ID=...`, (b) remove and rely on gateway check, (c) keep (single-deployment). Recommend (b) unless portability needed. P2.
