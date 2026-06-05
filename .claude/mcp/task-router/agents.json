@@ -1,0 +1,11 @@
+{
+  "pm":       { "capabilities": ["planning", "delegation", "wave-dispatch", "doc-ownership", "reconciliation"], "role": "coordinator" },
+  "arch":     { "capabilities": ["architecture", "component-boundaries", "phase-design", "init-sequencing"], "role": "coordinator" },
+  "review":   { "capabilities": ["code-review", "auditing", "risk-assessment", "invariant-enforcement"], "role": "coordinator" },
+  "scm":      { "capabilities": ["git", "commits", "branches", "tags", "prs"], "role": "specialist", "model": "claude-haiku-4-5" },
+  "power":    { "capabilities": ["relay-control", "power-detection", "state-machine", "gpio", "optocoupler", "pulse-analysis"], "role": "specialist", "model": "claude-sonnet-4-6" },
+  "mqtt":     { "capabilities": ["mqtt", "pubsubclient", "home-assistant", "topic-schema", "retained", "lwt", "json-telemetry"], "role": "specialist", "model": "claude-sonnet-4-6" },
+  "net":      { "capabilities": ["wifi", "ota", "mdns", "reconnect", "phy-mode", "connection-monitor", "espota"], "role": "specialist", "model": "claude-sonnet-4-6" },
+  "web":      { "capabilities": ["http-server", "web-ui", "html", "json-endpoint", "esp8266webserver"], "role": "specialist", "model": "claude-sonnet-4-6" },
+  "firmware": { "capabilities": ["platformio", "build-flags", "dual-mcu", "gpio-map", "secrets", "serial-debug", "ota-deploy", "integration"], "role": "specialist", "model": "claude-sonnet-4-6" }
+}

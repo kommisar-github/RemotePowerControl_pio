@@ -1,0 +1,24 @@
+# PlatformIO build artifacts
+.pio/
+.clang_complete
+.gcc-flags.json
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Claude Task Router
+.claude/tasks/*.task.md
+.claude/tasks/*.result.md
+.claude/mcp/task-router/node_modules/
